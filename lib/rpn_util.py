@@ -1372,21 +1372,25 @@ def test_kitti_3d(dataset_test, net, rpn_conf, results_path, test_path, use_log=
                 w3d = box[9]
                 h3d = box[10]
                 l3d = box[11]
-                ry3d = box[12]
+                alpha = box[12]
 
                 # convert alpha into ry3d
                 coord3d = np.linalg.inv(p2).dot(np.array([x3d * z3d, y3d * z3d, 1 * z3d, 1]))
-                ry3d = convertAlpha2Rot(ry3d, coord3d[2], coord3d[0])
+                ry3d = convertAlpha2Rot(alpha, coord3d[2], coord3d[0])
 
-                step_r = 0.3*math.pi
-                r_lim = 0.01
-                box_2d = np.array([x1, y1, width, height])
+                if rpn_conf.hill_climbing:
 
-                z3d, ry3d, verts_best = hill_climb(p2, p2_inv, box_2d, x3d, y3d, z3d, w3d, h3d, l3d, ry3d, step_r_init=step_r, r_lim=r_lim)
+                    step_r = 0.3*math.pi
+                    r_lim = 0.01
+                    box_2d = np.array([x1, y1, width, height])
 
-                # predict a more accurate projection
-                coord3d = np.linalg.inv(p2).dot(np.array([x3d * z3d, y3d * z3d, 1 * z3d, 1]))
-                alpha = convertRot2Alpha(ry3d, coord3d[2], coord3d[0])
+                    z3d, ry3d, verts_best = hill_climb(
+                        p2, p2_inv, box_2d, x3d, y3d, z3d, w3d, h3d, l3d, ry3d, step_r_init=step_r, r_lim=r_lim
+                    )
+
+                    # predict a more accurate projection
+                    coord3d = np.linalg.inv(p2).dot(np.array([x3d * z3d, y3d * z3d, 1 * z3d, 1]))
+                    alpha = convertRot2Alpha(ry3d, coord3d[2], coord3d[0])
 
                 x3d = coord3d[0]
                 y3d = coord3d[1]
